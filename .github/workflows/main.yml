@@ -1,0 +1,27 @@
+name: Download Counter
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  count-downloads:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Count file downloads
+        run: |
+          TOKEN=$GITHUB_TOKEN
+          OWNER=$GITHUB_REPOSITORY_OWNER
+          REPO=$GITHUB_REPOSITORY
+
+          # Loop through the assets of the latest release
+          for asset in $(curl -sH "Authorization: token $TOKEN" "https://api.github.com/repos/$OWNER/$REPO/releases/latest" | jq -r '.assets[].url'); do
+              download_count=$(curl -sH "Authorization: token $TOKEN" $asset | jq -r '.download_count')
+              asset_name=$(curl -sH "Authorization: token $TOKEN" $asset | jq -r '.name')
+              echo "$asset_name: $download_count"
+          done
